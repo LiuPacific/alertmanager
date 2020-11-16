@@ -390,6 +390,9 @@ func (l *Log) Log(r *pb.Receiver, gkey string, firingAlerts, resolvedAlerts []ui
 	now := l.now()
 	key := stateKey(gkey, r)
 
+	//if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+	//	typing.MonStoreLog.Println("broadcast s " + gkey)
+	//}
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
 
@@ -412,12 +415,17 @@ func (l *Log) Log(r *pb.Receiver, gkey string, firingAlerts, resolvedAlerts []ui
 		ExpiresAt: now.Add(l.retention),
 	}
 
+	//一旦把这里注释掉， set notifier就可以直接结束
+	//如果不把这里注释，打印了前后花费的时间都是瞬间执行完毕。奇怪
 	b, err := marshalMeshEntry(e)
 	if err != nil {
 		return err
 	}
 	l.st.merge(e, l.now())
 	l.broadcast(b)
+	//if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+	//	typing.MonStoreLog.Println("broadcast e " + gkey)
+	//}
 
 	return nil
 }

@@ -16,6 +16,7 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/prometheus/alertmanager/typing"
 	"sync"
 	"time"
 
@@ -74,10 +75,12 @@ func (a *Alerts) gc() {
 	a.Lock()
 	defer a.Unlock()
 
+	typing.MonStoreLog.Printf("mem len is %d", len(a.c))
 	var resolved []*types.Alert
 	for fp, alert := range a.c {
 		if alert.Resolved() {
 			delete(a.c, fp)
+			typing.MonStoreLog.Printf("delete %s", alert.Annotations["id"])
 			resolved = append(resolved, alert)
 		}
 	}

@@ -15,6 +15,7 @@ package nflog
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -311,4 +312,16 @@ func TestStateDecodingError(t *testing.T) {
 
 	_, err = decodeState(bytes.NewReader(msg))
 	require.Equal(t, ErrInvalidState, err)
+}
+
+func TestA(t *testing.T) {
+	f, err := os.Open("/Users/taipingliu/go/src/alertmanager/alertmanager/.build/nflog/nflog_85")
+	require.NoError(t, err, "opening snapshot file failed")
+
+	// Check again against new nlog instance.
+	l2 := &Log{}
+	err = l2.loadSnapshot(f)
+	for _,meshEntry := range l2.st{
+		fmt.Println(meshEntry.String())
+	}
 }
