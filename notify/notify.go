@@ -16,6 +16,7 @@ package notify
 import (
 	"context"
 	"fmt"
+	"github.com/prometheus/alertmanager/typing"
 	"sort"
 	"sync"
 	"time"
@@ -440,6 +441,7 @@ func (ws *WaitStage) Exec(ctx context.Context, l log.Logger, alerts ...*types.Al
 	case <-ctx.Done():
 		return ctx, nil, ctx.Err()
 	}
+
 	return ctx, alerts, nil
 }
 
@@ -589,6 +591,7 @@ func (n *DedupStage) Exec(ctx context.Context, l log.Logger, alerts ...*types.Al
 	if n.needsUpdate(entry, firingSet, resolvedSet, repeatInterval) {
 		return ctx, alerts, nil
 	}
+
 	return ctx, nil, nil
 }
 
@@ -661,7 +664,14 @@ func (r RetryStage) Exec(ctx context.Context, l log.Logger, alerts ...*types.Ale
 		select {
 		case <-tick.C:
 			now := time.Now()
+
+			typing.OutAlert(sent)
+
 			retry, err := r.integration.Notify(ctx, sent...)
+			for _, alert := range sent {
+				typing.FlushAlert(alert, "notified")
+			}
+
 			r.metrics.notificationLatencySeconds.WithLabelValues(r.integration.Name()).Observe(time.Since(now).Seconds())
 			r.metrics.numNotifications.WithLabelValues(r.integration.Name()).Inc()
 			if err != nil {
@@ -725,6 +735,10 @@ func (n SetNotifiesStage) Exec(ctx context.Context, l log.Logger, alerts ...*typ
 	resolved, ok := ResolvedAlerts(ctx)
 	if !ok {
 		return ctx, nil, errors.New("resolved alerts missing")
+	}
+
+	for _, alert := range alerts {
+		typing.FlushAlert(alert, "before-set-notifier")
 	}
 
 	return ctx, alerts, n.nflog.Log(n.recv, gkey, firing, resolved)

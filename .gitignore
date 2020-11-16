@@ -6,6 +6,8 @@
 /.build
 /.release
 /.tarballs
+/.idea
+/.gitignore
 
 !.golangci.yml
 !/cli/testdata/*.yml

@@ -15,6 +15,7 @@ package mem
 
 import (
 	"context"
+	"github.com/prometheus/alertmanager/typing"
 	"sync"
 	"time"
 
@@ -148,8 +149,15 @@ func (a *Alerts) Get(fp model.Fingerprint) (*types.Alert, error) {
 
 // Put adds the given alert to the set.
 func (a *Alerts) Put(alerts ...*types.Alert) error {
+	typing.MonStoreLog.Printf("put %d", len(alerts))
 
 	for _, alert := range alerts {
+		typing.InAlert(alert)
+		if alert.Annotations["id"] == "6305528762073529654_15240_critical" {
+			typing.MonStoreLog.Printf("content: annotations: %s labels: %s endAt: %s \n", alert.Annotations.String(), alert.Labels.String(), alert.EndsAt.Format(typing.TimeFormat))
+			//MonInAlertLog.Printf("annotations: %s\nlabels: %s\n", alert.Annotations.String(), alert.Labels.String())
+		}
+
 		fp := alert.Fingerprint()
 
 		// Check that there's an alert existing within the store before
@@ -158,6 +166,7 @@ func (a *Alerts) Put(alerts ...*types.Alert) error {
 			// Merge alerts if there is an overlap in activity range.
 			if (alert.EndsAt.After(old.StartsAt) && alert.EndsAt.Before(old.EndsAt)) ||
 				(alert.StartsAt.After(old.StartsAt) && alert.StartsAt.Before(old.EndsAt)) {
+				typing.MonStoreLog.Printf("alert merge : old %s; del %s", old.Annotations["id"], alert.Annotations["id"])
 				alert = old.Merge(alert)
 			}
 		}

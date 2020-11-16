@@ -16,6 +16,7 @@ package dispatch
 import (
 	"context"
 	"fmt"
+	"github.com/prometheus/alertmanager/typing"
 	"sort"
 	"sync"
 	"time"
@@ -387,6 +388,10 @@ func (ag *aggrGroup) run(nf notifyFunc) {
 	defer ag.next.Stop()
 
 	for {
+		for _, alert := range ag.alerts.List() {
+			typing.FlushAlert(alert, "aggr0")
+		}
+
 		select {
 		case now := <-ag.next.C:
 			// Give the notifications time until the next flush to
@@ -405,6 +410,11 @@ func (ag *aggrGroup) run(nf notifyFunc) {
 			ctx = notify.WithReceiverName(ctx, ag.opts.Receiver)
 			ctx = notify.WithRepeatInterval(ctx, ag.opts.RepeatInterval)
 
+			typingAlerts := ag.alerts.List()
+			for _, alert := range typingAlerts {
+				typing.FlushAlert(alert, "aggr1")
+			}
+
 			// Wait the configured interval before calling flush again.
 			ag.mtx.Lock()
 			ag.next.Reset(ag.opts.GroupInterval)
@@ -417,6 +427,9 @@ func (ag *aggrGroup) run(nf notifyFunc) {
 
 			cancel()
 
+			for _, alert := range typingAlerts {
+				typing.FlushAlert(alert, "aggr2")
+			}
 		case <-ag.ctx.Done():
 			return
 		}
@@ -471,6 +484,10 @@ func (ag *aggrGroup) flush(notify func(...*types.Alert) bool) {
 	sort.Stable(alertsSlice)
 
 	level.Debug(ag.logger).Log("msg", "flushing", "alerts", fmt.Sprintf("%v", alertsSlice))
+
+	for _, alert := range alertsSlice {
+		typing.FlushAlert(alert, "am-flush")
+	}
 
 	if notify(alertsSlice...) {
 		for _, a := range alertsSlice {
