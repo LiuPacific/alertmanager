@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/prometheus/alertmanager/typing"
 	"io"
 	"math/rand"
 	"os"
@@ -390,9 +391,16 @@ func (l *Log) Log(r *pb.Receiver, gkey string, firingAlerts, resolvedAlerts []ui
 	now := l.now()
 	key := stateKey(gkey, r)
 
+
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 0 " + gkey)
+	}
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
 
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 1 " + gkey)
+	}
 	if prevle, ok := l.st[key]; ok {
 		// Entry already exists, only overwrite if timestamp is newer.
 		// This may happen with raciness or clock-drift across AM nodes.
@@ -401,6 +409,9 @@ func (l *Log) Log(r *pb.Receiver, gkey string, firingAlerts, resolvedAlerts []ui
 		}
 	}
 
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 2 " + gkey)
+	}
 	e := &pb.MeshEntry{
 		Entry: &pb.Entry{
 			Receiver:       r,
@@ -412,13 +423,25 @@ func (l *Log) Log(r *pb.Receiver, gkey string, firingAlerts, resolvedAlerts []ui
 		ExpiresAt: now.Add(l.retention),
 	}
 
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 3 " + gkey)
+	}
+
 	b, err := marshalMeshEntry(e)
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 4 " + gkey)
+	}
 	if err != nil {
 		return err
 	}
 	l.st.merge(e, l.now())
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 5 " + gkey)
+	}
 	l.broadcast(b)
-
+	if gkey == "{}:{config_id=\"15240\", endpoint=\"https\", mon_proj=\"projects/6927\"}" {
+		typing.MonStoreLog.Println("broadcast 6 " + gkey)
+	}
 	return nil
 }
 
