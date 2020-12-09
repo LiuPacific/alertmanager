@@ -300,6 +300,9 @@ func (d *Dispatcher) processAlert(alert *types.Alert, route *Route) {
 					lvl = level.Debug(d.logger)
 				}
 				lvl.Log("msg", "Notify for alerts failed", "num_alerts", len(alerts), "err", err)
+				if len(alerts) > 0 {
+					typing.FlushAlert(alert, "aggr err")
+				}
 			}
 			return err == nil
 		})

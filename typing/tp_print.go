@@ -22,7 +22,7 @@ const (
 	//InterfaceName = "lo0" // TODO: 网卡名
 	LogPath = "/data/log/alertmanager"
 	//LogPath    = "/Users/taipingliu/data/logs" // TODO: 修改路径，带有服务名
-	TimeFormat = "15:04:05.000"
+	TimeFormat = "2006-01-02T15:04:05.000"
 	InMarker   = "am-in"  // TODO: 入标记 |11:55:55.234|10.129.101.85|am-in|adfasf|
 	OutMarker  = "am-out" // TODO: 出标记 |11:55:55.234|10.129.101.85|am-out|adfasf|
 
